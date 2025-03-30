@@ -35,7 +35,7 @@ The following external tools should be installed and available in your PATH:
 ## Usage
 
 ```bash
-python domain_scanner.py -d example.com
+python script.py -d example.com
 ```
 
 ### Command Line Arguments
@@ -78,12 +78,12 @@ verbose: true
 
 Basic scan:
 ```bash
-python domain_scanner.py -d example.com
+python script.py -d example.com
 ```
 
 Advanced scan:
 ```bash
-python domain_scanner.py -d example.com --scan-ports --ports 80,443,8080,8443 -t 20 --wordlist subdomains.txt --nuclei-templates /path/to/templates
+python script.py -d example.com --scan-ports --ports 80,443,8080,8443 -t 20 --wordlist subdomains.txt --nuclei-templates /path/to/templates
 ```
 
 ## Output
