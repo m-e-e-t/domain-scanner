@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Domain Scan Report: {{ domain }}</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        h1, h2, h3 { color: #333; }
+        .summary { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; background-color: #f9f9f9; }
+        .result-section { margin-bottom: 30px; border: 1px solid #eee; padding: 15px; }
+        .vulnerability { background-color: #fdd; border-left: 5px solid red; padding: 10px; margin-bottom: 10px; }
+        .subdomain { background-color: #efe; border-left: 5px solid green; padding: 10px; margin-bottom: 10px; }
+        .port { background-color: #eef; border-left: 5px solid blue; padding: 10px; margin-bottom: 10px; }
+        .dns-record { background-color: #fdf; border-left: 5px solid purple; padding: 10px; margin-bottom: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f0f0f0; }
+        .no-results { font-style: italic; color: #777; }
+    </style>
+</head>
+<body>
+    <h1>Domain Scan Report: {{ domain }}</h1>
+    <div class="summary">
+        <p><strong>Scan Start Time:</strong> {{ scan_start_time }}</p>
+        <p><strong>Scan Duration:</strong> {{ scan_duration }}</p>
+        <p><strong>Target Domain:</strong> {{ domain }}</p>
+        <p><strong>Discovered Subdomains:</strong> {{ subdomains|length }}</p>
+    </div>
+
+    <h2>Detailed Scan Results</h2>
+    {% if results %}
+        {% for result in results %}
+            <div class="result-section">
+                <h3>{% if result.url %}URL: {{ result.url }}{% elif result.domain %}Domain: {{ result.domain }}{% endif %}</h3>
+                {% if result.ip_address %}
+                    <p><strong>IP Address:</strong> {{ result.ip_address }}</p>
+                {% endif %}
+                {% if result.status_code %}
+                    <p><strong>Status Code:</strong> {{ result.status_code }}</p>
+                {% endif %}
+                {% if result.title %}
+                    <p><strong>Title:</strong> {{ result.title }}</p>
+                {% endif %}
+                {% if result.server %}
+                    <p><strong>Server:</strong> {{ result.server }}</p>
+                {% endif %}
+                {% if result.content_type %}
+                    <p><strong>Content Type:</strong> {{ result.content_type }}</p>
+                {% endif %}
+                {% if result.headers %}
+                    <h4>Headers:</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for name, value in result.headers.items() %}
+                                <tr>
+                                    <td>{{ name }}</td>
+                                    <td>{{ value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+                {% if result.technologies %}
+                    <h4>Detected Technologies:</h4>
+                    <ul>
+                        {% for tech, value in result.technologies.items() %}
+                            <li><strong>{{ tech }}:</strong> {{ value }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if result.favicon %}
+                    <p><strong>Favicon:</strong> <a href="{{ result.favicon }}" target="_blank">{{ result.favicon }}</a></p>
+                {% endif %}
+                {% if result.certificate %}
+                    <h4>Certificate Information:</h4>
+                    <p><strong>Subject:</strong> {{ result.certificate.subject }}</p>
+                    <p><strong>Issuer:</strong> {{ result.certificate.issuer }}</p>
+                    <p><strong>Valid From:</strong> {{ result.certificate.not_before }}</p>
+                    <p><strong>Valid Until:</strong> {{ result.certificate.not_after }} ({{ result.certificate.days_to_expiry }} days remaining)</p>
+                    <p><strong>Serial Number:</strong> {{ result.certificate.serial_number }}</p>
+                {% endif %}
+                {% if result.port_scan %}
+                    <h3>Port Scan Results:</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Port</th>
+                                <th>Status</th>
+                                <th>Service</th>
+                                <th>Version</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for port, details in result.port_scan.items() %}
+                                <tr class="port">
+                                    <td>{{ port }}</td>
+                                    <td>Open</td>
+                                    <td>{{ details.service }}</td>
+                                    <td>{{ details.version }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% if not result.port_scan %}
+                        <p class="no-results">No open ports found.</p>
+                    {% endif %}
+                {% endif %}
+                {% if result.dns_records %}
+                    <h3>DNS Records:</h3>
+                    {% for record_type, records in result.dns_records.items() %}
+                        <h4>{{ record_type }} Records:</h4>
+                        {% if records %}
+                            <ul>
+                                {% for record in records %}
+                                    <li class="dns-record">{{ record }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="no-results">No {{ record_type }} records found.</p>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+                {% if result.dns_zone_transfer_from %}
+                    <h3>DNS Zone Transfer:</h3>
+                    <p><strong>Successful zone transfer from:</strong> {{ result.dns_zone_transfer_from }}</p>
+                    <pre>{{ result.records }}</pre>
+                {% endif %}
+                {% if result.vulnerability %}
+                    <div class="vulnerability">
+                        <h3>Vulnerability Found: {{ result.vulnerability.info.name }}</h3>
+                        <p><strong>Severity:</strong> {{ result.vulnerability.info.severity }}</p>
+                        <p><strong>Description:</strong> {{ result.vulnerability.info.description }}</p>
+                        <p><strong>References:</strong>
+                            <ul>
+                            {% for ref in result.vulnerability.info.get('reference', []) %}
+                                <li><a href="{{ ref }}" target="_blank">{{ ref }}</a></li>
+                            {% endfor %}
+                            </ul>
+                        </p>
+                    </div>
+                {% endif %}
+                {% if result.error %}
+                    <p class="error"><strong>Error:</strong> {{ result.error }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="no-results">No scan results available.</p>
+    {% endif %}
+
+    <h2>Discovered Subdomains</h2>
+    <ul>
+        {% for subdomain in subdomains %}
+            <li class="subdomain">{{ subdomain }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
